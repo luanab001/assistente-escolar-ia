@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🤖 Assistente Escolar IA — Colégio El Shadai</title>
+<!-- Puter.js: sem chave, sem backend -->
+<script src="https://js.puter.com/v2/"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 @keyframes gradientBG {
@@ -83,12 +85,12 @@ body {
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s; }
 label { display: block; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; font-size: 14px; }
-select, textarea, input[type="password"] {
+select, textarea {
   width: 100%; border: 2px solid #c7d2fe; border-radius: 12px; padding: 12px;
   font-size: 14px; font-family: inherit; margin-bottom: 16px;
   transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(30,58,138,0.08); background: white;
 }
-select:focus, textarea:focus, input[type="password"]:focus {
+select:focus, textarea:focus {
   border-color: #7c3aed; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); outline: none;
 }
 textarea { resize: vertical; min-height: 80px; }
@@ -103,7 +105,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-primary { background: linear-gradient(135deg, #10b981, #059669); }
 .btn-info { background: linear-gradient(135deg, #0ea5e9, #0e7490); }
 .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.btn-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 .result { margin-top: 16px; padding: 20px; border-radius: 14px; font-size: 15px; line-height: 1.7; color: #1e293b; animation: fadeIn 0.4s; }
 .result.materia { border-left: 5px solid #7c3aed; background: linear-gradient(135deg, #f5f3ff, #ede9fe); box-shadow: 0 6px 20px rgba(124,58,237,0.15); }
 .result.setor { border-left: 5px solid #0e7490; background: linear-gradient(135deg, #ecfeff, #cffafe); box-shadow: 0 6px 20px rgba(14,116,144,0.15); }
@@ -122,34 +123,17 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
   margin-left: auto; margin-right: auto; position: relative; z-index: 1;
 }
 .intro { font-size: 15px; color: #1e293b; margin-bottom: 16px; }
-.key-setup {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 2px solid #f59e0b;
-  border-radius: 16px;
-  padding: 22px;
-  margin-bottom: 22px;
-  display: none;
-}
-.key-setup.show { display: block; animation: fadeIn 0.4s; }
-.key-setup h2 { color: #78350f; font-size: 18px; margin-bottom: 10px; }
-.key-setup p { color: #78350f; font-size: 13px; line-height: 1.6; margin-bottom: 14px; }
-.key-setup a { color: #7c3aed; font-weight: 700; }
-.key-status {
-  display: none;
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  border: 2px solid #10b981;
+.notice {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border: 2px solid #3b82f6;
   border-radius: 14px;
   padding: 14px 18px;
   margin-bottom: 18px;
-  color: #065f46;
-  font-size: 14px;
-  font-weight: 600;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.6;
 }
-.key-status.show { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-.key-status button {
-  padding: 6px 14px; border-radius: 8px; border: none; cursor: pointer;
-  background: #dc2626; color: white; font-weight: 700; font-size: 12px;
-}
+.notice strong { color: #1e40af; }
 </style>
 </head>
 <body>
@@ -163,30 +147,13 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 <div class="hero">
   <h1>🤖 Assistente Escolar IA</h1>
   <p>Colégio El Shadai — Dúvidas de matérias + apoio dos setores</p>
-  <span class="badge">✨ Powered by Google Gemini</span>
+  <span class="badge">✨ Powered by Puter.js + Gemini</span>
 </div>
 
 <div class="container">
 
-  <div class="key-setup" id="keySetup">
-    <h2>🔑 Configure sua chave do Gemini</h2>
-    <p>
-      Para usar o assistente, você precisa de uma chave de API gratuita do Google Gemini.
-      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Clique aqui</a>
-      para criar a sua (leva menos de 1 minuto). A chave fica salva <strong>apenas no seu navegador</strong>.
-    </p>
-    <label>Cole sua chave aqui:</label>
-    <input type="password" id="keyInput" placeholder="Cole sua chave do Gemini aqui...">
-    <div class="buttons">
-      <button class="btn btn-purple" onclick="salvarChave()">💾 Salvar chave</button>
-      <button class="btn btn-warning" onclick="cancelarChave()">Cancelar</button>
-    </div>
-    <div id="keyError"></div>
-  </div>
-
-  <div class="key-status" id="keyStatus">
-    <span>✅ Chave configurada neste dispositivo</span>
-    <button onclick="trocarChave()">🔄 Trocar chave</button>
+  <div class="notice">
+    <strong>💡 Primeira vez aqui?</strong> Ao fazer sua primeira pergunta, o Puter vai pedir para você entrar ou criar uma conta gratuita. Isso leva menos de 30 segundos e é necessário para que a IA funcione. Depois, a sessão fica salva.
   </div>
 
   <div class="tabs">
@@ -254,15 +221,14 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <div class="footer">
-  ✨ Protótipo — Projeto Final de IA — 3º Ano | Powered by Google Gemini ✨
+  ✨ Protótipo — Projeto Final de IA — 3º Ano | Powered by Puter.js + Gemini ✨
 </div>
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO — MODELOS MAIS LEVES (menos sobrecarga)
+// CONFIGURAÇÃO
 // ============================================================
-const MODELOS = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
-const STORAGE_KEY = "gemini_api_key_assistente_escolar";
+const MODELO = "google/gemini-2.5-flash"; // Modelo estável e rápido no Puter [citation:2][citation:8]
 
 const DESCRICAO_SETORES = {
   "🏛️ Direção": "decisões gerais, normas da escola, reclamações formais, autorizações.",
@@ -281,56 +247,6 @@ const DESCRICAO_SETORES = {
 };
 
 // ============================================================
-// GERENCIAMENTO DA CHAVE
-// ============================================================
-function getChave() {
-  return localStorage.getItem(STORAGE_KEY) || "";
-}
-
-function salvarChave() {
-  const input = document.getElementById('keyInput');
-  const chave = input.value.trim();
-  const erro = document.getElementById('keyError');
-
-  if (!chave) {
-    erro.innerHTML = "<div class='error'>⚠️ Cole sua chave antes de salvar.</div>";
-    return;
-  }
-  if (chave.length < 20) {
-    erro.innerHTML = "<div class='error'>⚠️ Chave muito curta. Verifique se copiou corretamente.</div>";
-    return;
-  }
-
-  localStorage.setItem(STORAGE_KEY, chave);
-  input.value = "";
-  erro.innerHTML = "";
-  atualizarUI();
-}
-
-function cancelarChave() {
-  document.getElementById('keySetup').classList.remove('show');
-}
-
-function trocarChave() {
-  localStorage.removeItem(STORAGE_KEY);
-  atualizarUI();
-}
-
-function atualizarUI() {
-  const setup = document.getElementById('keySetup');
-  const status = document.getElementById('keyStatus');
-  const temChave = !!getChave();
-
-  if (temChave) {
-    setup.classList.remove('show');
-    status.classList.add('show');
-  } else {
-    setup.classList.add('show');
-    status.classList.remove('show');
-  }
-}
-
-// ============================================================
 // ABAS
 // ============================================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -343,67 +259,20 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ============================================================
-// CHAMADA À API DO GEMINI — RETRY REFORÇADO
+// CHAMADA À IA COM PUTER.JS (sem chave, sem backend)
 // ============================================================
 async function chamarIA(prompt) {
-  const chave = getChave();
-  if (!chave) {
-    return "⚠️ Configure sua chave do Gemini primeiro (veja o aviso amarelo no topo).";
+  try {
+    // O Puter cuida da autenticação e da chamada.
+    // Na primeira vez, abre a tela de login do Puter automaticamente.
+    const response = await puter.ai.chat(prompt, {
+      model: MODELO
+    });
+    return response;
+  } catch (e) {
+    console.error(e);
+    return "❌ Ocorreu um erro ao processar sua pergunta. Se for a primeira vez, verifique se você concluiu o login no Puter. Tente novamente.";
   }
-
-  let ultimoErro = "";
-
-  for (const modelo of MODELOS) {
-    // 5 tentativas por modelo
-    for (let tentativa = 0; tentativa < 5; tentativa++) {
-      try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${chave}`;
-        const resp = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { maxOutputTokens: 2000 }
-          })
-        });
-
-        if (!resp.ok) {
-          const err = await resp.json().catch(() => ({}));
-          const msg = err.error?.message || resp.statusText;
-          ultimoErro = `(${resp.status}) ${msg}`;
-
-          // Chave inválida — não adianta tentar de novo
-          if (resp.status === 403 || resp.status === 401) {
-            return "❌ Chave inválida. Clique em '🔄 Trocar chave' e cole uma chave válida do Google AI Studio.";
-          }
-          // Sobrecarga ou limite de taxa — espera e tenta de novo
-          if (resp.status === 503 || resp.status === 429 ||
-              msg.includes("UNAVAILABLE") || msg.includes("overloaded") || msg.includes("high demand")) {
-            const espera = 2000 * Math.pow(2, tentativa) + Math.random() * 1000;
-            await new Promise(r => setTimeout(r, espera));
-            continue;
-          }
-          // Modelo não existe — passa para o próximo
-          if (resp.status === 404) {
-            break;
-          }
-          // Outros erros
-          return `❌ Erro na IA (${resp.status}): ${msg}`;
-        }
-
-        const data = await resp.json();
-        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (texto) return texto;
-
-      } catch (e) {
-        ultimoErro = e.message;
-        if (tentativa === 4) break;
-        await new Promise(r => setTimeout(r, 2000 * Math.pow(2, tentativa)));
-      }
-    }
-  }
-
-  return "❌ O serviço de IA continua sobrecarregado. Aguarde 1 ou 2 minutos e tente novamente.\n\n💡 Dica: o Google libera capacidade continuamente — basta tentar de novo em instantes.\n\nDetalhe técnico: " + ultimoErro;
 }
 
 function escaparHtml(t) {
@@ -434,12 +303,12 @@ async function perguntarMateria() {
       `Explique de forma clara, curta e com exemplos. Dúvida do aluno: ${pergunta}`;
   }
 
-  box.innerHTML = "<p class='loading'>⏳ Pensando... (pode levar alguns segundos)</p>";
+  box.innerHTML = "<p class='loading'>⏳ Pensando... (na primeira vez, faça login no Puter se solicitado)</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
 
-  if (texto.startsWith("❌") || texto.startsWith("⚠️")) {
+  if (texto.startsWith("❌")) {
     box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`;
   } else {
     box.innerHTML = `<div class="result materia">
@@ -482,12 +351,12 @@ async function resolverSetor() {
       "Se o problema NÃO for desse setor, indique o setor correto. Situação do aluno: " + problema;
   }
 
-  box.innerHTML = "<p class='loading setor-loading'>⏳ Verificando e buscando solução... (pode levar alguns segundos)</p>";
+  box.innerHTML = "<p class='loading setor-loading'>⏳ Verificando e buscando solução... (na primeira vez, faça login no Puter se solicitado)</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
 
-  if (texto.startsWith("❌") || texto.startsWith("⚠️")) {
+  if (texto.startsWith("❌")) {
     box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`;
   } else {
     box.innerHTML = `<div class="result setor">
@@ -501,11 +370,6 @@ function limparSetor() {
   document.getElementById('setorInput').value = "";
   document.getElementById('resultSetor').innerHTML = "";
 }
-
-// ============================================================
-// INICIALIZAÇÃO
-// ============================================================
-atualizarUI();
 </script>
 </body>
 </html>
