@@ -223,7 +223,18 @@ async function chamarIA(prompt) {
       });
       if (resp.ok) {
         const data = await resp.json();
-        const texto = data.outputs?.[data.outputs.length - 1]?.text;
+        let texto = "";
+        if (data.steps && Array.isArray(data.steps)) {
+          for (const step of data.steps) {
+            if (step.type === "model_output" && step.content && step.content.length > 0) {
+              for (const bloco of step.content) {
+                if (bloco.type === "text" && bloco.text) {
+                  texto += bloco.text;
+                }
+              }
+            }
+          }
+        }
         if (texto) return texto;
         return "❌ A IA retornou uma resposta vazia. Tente novamente.";
       } else {
