@@ -138,7 +138,8 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <script>
-const MODELO_PUTER = "google/gemini-2.5-flash";
+const MODELO_PRINCIPAL = "gemini-3.5-flash";
+const MODELO_FALLBACK = "gemini-3.5-flash-lite";
 
 const DESCRICAO_SETORES = {
   "🏛️ Direção": "decisões gerais, normas da escola, reclamações formais, autorizações.",
@@ -165,14 +166,40 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
+// Função auxiliar: adiciona timeout a uma Promise
+function comTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout: a IA demorou demais para responder")), ms)
+    )
+  ]);
+}
+
 async function chamarIA(prompt) {
+  // Tentativa 1: modelo principal
   try {
-    const response = await puter.ai.chat(prompt, { model: MODELO_PUTER });
+    const response = await comTimeout(
+      puter.ai.chat(prompt, { model: MODELO_PRINCIPAL }),
+      30000
+    );
     return response;
   } catch (e) {
-    console.error(e);
-    return "❌ Ocorreu um erro ao processar sua pergunta. Verifique sua conexão e tente novamente.";
+    console.error("Erro no modelo principal:", e);
   }
+
+  // Tentativa 2: modelo de fallback (mais leve)
+  try {
+    const response = await comTimeout(
+      puter.ai.chat(prompt, { model: MODELO_FALLBACK }),
+      20000
+    );
+    return response;
+  } catch (e2) {
+    console.error("Erro no modelo de fallback:", e2);
+  }
+
+  return "❌ A IA não conseguiu responder. Verifique sua conexão e tente novamente em alguns instantes.";
 }
 
 function escaparHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
