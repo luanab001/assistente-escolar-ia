@@ -122,8 +122,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
   margin-left: auto; margin-right: auto; position: relative; z-index: 1;
 }
 .intro { font-size: 15px; color: #1e293b; margin-bottom: 16px; }
-
-/* Tela de configuração da chave */
 .key-setup {
   background: linear-gradient(135deg, #fef3c7, #fde68a);
   border: 2px solid #f59e0b;
@@ -170,7 +168,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 <div class="container">
 
-  <!-- Tela de configuração da chave -->
   <div class="key-setup" id="keySetup">
     <h2>🔑 Configure sua chave do Gemini</h2>
     <p>
@@ -187,7 +184,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
     <div id="keyError"></div>
   </div>
 
-  <!-- Status da chave configurada -->
   <div class="key-status" id="keyStatus">
     <span>✅ Chave configurada neste dispositivo</span>
     <button onclick="trocarChave()">🔄 Trocar chave</button>
@@ -263,9 +259,9 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO
+// CONFIGURAÇÃO — MODELOS MAIS LEVES (menos sobrecarga)
 // ============================================================
-const MODELOS = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+const MODELOS = ["gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
 const STORAGE_KEY = "gemini_api_key_assistente_escolar";
 
 const DESCRICAO_SETORES = {
@@ -347,7 +343,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ============================================================
-// CHAMADA À API DO GEMINI (retry + fallback)
+// CHAMADA À API DO GEMINI — RETRY REFORÇADO
 // ============================================================
 async function chamarIA(prompt) {
   const chave = getChave();
@@ -355,8 +351,11 @@ async function chamarIA(prompt) {
     return "⚠️ Configure sua chave do Gemini primeiro (veja o aviso amarelo no topo).";
   }
 
+  let ultimoErro = "";
+
   for (const modelo of MODELOS) {
-    for (let tentativa = 0; tentativa < 3; tentativa++) {
+    // 5 tentativas por modelo
+    for (let tentativa = 0; tentativa < 5; tentativa++) {
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${chave}`;
         const resp = await fetch(url, {
@@ -371,20 +370,24 @@ async function chamarIA(prompt) {
         if (!resp.ok) {
           const err = await resp.json().catch(() => ({}));
           const msg = err.error?.message || resp.statusText;
+          ultimoErro = `(${resp.status}) ${msg}`;
 
+          // Chave inválida — não adianta tentar de novo
           if (resp.status === 403 || resp.status === 401) {
             return "❌ Chave inválida. Clique em '🔄 Trocar chave' e cole uma chave válida do Google AI Studio.";
           }
-          if (resp.status === 503 || msg.includes("UNAVAILABLE") || msg.includes("overloaded")) {
-            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, tentativa)));
+          // Sobrecarga ou limite de taxa — espera e tenta de novo
+          if (resp.status === 503 || resp.status === 429 ||
+              msg.includes("UNAVAILABLE") || msg.includes("overloaded") || msg.includes("high demand")) {
+            const espera = 2000 * Math.pow(2, tentativa) + Math.random() * 1000;
+            await new Promise(r => setTimeout(r, espera));
             continue;
           }
-          if (resp.status === 429) {
-            return "⚠️ Muitas requisições em pouco tempo. Aguarde alguns segundos e tente novamente.";
-          }
+          // Modelo não existe — passa para o próximo
           if (resp.status === 404) {
-            continue; // tenta o próximo modelo da lista
+            break;
           }
+          // Outros erros
           return `❌ Erro na IA (${resp.status}): ${msg}`;
         }
 
@@ -393,12 +396,14 @@ async function chamarIA(prompt) {
         if (texto) return texto;
 
       } catch (e) {
-        if (tentativa === 2) return `❌ Erro de rede: ${e.message}`;
-        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, tentativa)));
+        ultimoErro = e.message;
+        if (tentativa === 4) break;
+        await new Promise(r => setTimeout(r, 2000 * Math.pow(2, tentativa)));
       }
     }
   }
-  return "❌ O serviço de IA está temporariamente sobrecarregado. Tente novamente em alguns instantes.";
+
+  return "❌ O serviço de IA continua sobrecarregado. Aguarde 1 ou 2 minutos e tente novamente.\n\n💡 Dica: o Google libera capacidade continuamente — basta tentar de novo em instantes.\n\nDetalhe técnico: " + ultimoErro;
 }
 
 function escaparHtml(t) {
@@ -429,7 +434,7 @@ async function perguntarMateria() {
       `Explique de forma clara, curta e com exemplos. Dúvida do aluno: ${pergunta}`;
   }
 
-  box.innerHTML = "<p class='loading'>⏳ Pensando...</p>";
+  box.innerHTML = "<p class='loading'>⏳ Pensando... (pode levar alguns segundos)</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
@@ -477,7 +482,7 @@ async function resolverSetor() {
       "Se o problema NÃO for desse setor, indique o setor correto. Situação do aluno: " + problema;
   }
 
-  box.innerHTML = "<p class='loading setor-loading'>⏳ Verificando e buscando solução...</p>";
+  box.innerHTML = "<p class='loading setor-loading'>⏳ Verificando e buscando solução... (pode levar alguns segundos)</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
