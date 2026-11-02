@@ -23,8 +23,8 @@ body { font-family: 'Segoe UI', Arial, sans-serif; min-height: 100vh; background
 .tab-content { display: none; }
 .tab-content.active { display: block; animation: fadeIn 0.3s; }
 label { display: block; font-weight: 700; color: #1e3a8a; margin-bottom: 8px; font-size: 14px; }
-select, textarea, input[type="password"] { width: 100%; border: 2px solid #c7d2fe; border-radius: 12px; padding: 12px; font-size: 14px; font-family: inherit; margin-bottom: 16px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(30,58,138,0.08); background: white; }
-select:focus, textarea:focus, input[type="password"]:focus { border-color: #7c3aed; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); outline: none; }
+select, textarea { width: 100%; border: 2px solid #c7d2fe; border-radius: 12px; padding: 12px; font-size: 14px; font-family: inherit; margin-bottom: 16px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(30,58,138,0.08); background: white; }
+select:focus, textarea:focus { border-color: #7c3aed; box-shadow: 0 0 0 4px rgba(124,58,237,0.15); outline: none; }
 textarea { resize: vertical; min-height: 80px; }
 .buttons { display: flex; gap: 10px; flex-wrap: wrap; }
 button.btn { padding: 12px 24px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700; font-family: inherit; font-size: 14px; transition: all 0.25s ease; color: white; }
@@ -33,7 +33,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn-primary { background: linear-gradient(135deg, #10b981, #059669); }
 .btn-info { background: linear-gradient(135deg, #0ea5e9, #0e7490); }
 .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.btn-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
 .result { margin-top: 16px; padding: 20px; border-radius: 14px; font-size: 15px; line-height: 1.7; color: #1e293b; animation: fadeIn 0.4s; }
 .result.materia { border-left: 5px solid #7c3aed; background: linear-gradient(135deg, #f5f3ff, #ede9fe); box-shadow: 0 6px 20px rgba(124,58,237,0.15); }
 .result.setor { border-left: 5px solid #0e7490; background: linear-gradient(135deg, #ecfeff, #cffafe); box-shadow: 0 6px 20px rgba(14,116,144,0.15); }
@@ -48,10 +47,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .intro { font-size: 15px; color: #1e293b; margin-bottom: 16px; }
 .notice { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border: 2px solid #3b82f6; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; color: #1e3a8a; font-size: 13px; line-height: 1.6; }
 .notice strong { color: #1e40af; }
-.creator-panel { background: #f8fafc; border: 2px dashed #94a3b8; border-radius: 14px; padding: 16px; margin-bottom: 18px; font-size: 13px; }
-.creator-panel summary { cursor: pointer; font-weight: 700; color: #475569; }
-.creator-panel .content { margin-top: 12px; }
-.creator-panel .status { margin-top: 8px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -69,19 +64,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <div class="container">
-  <details class="creator-panel">
-    <summary>🔑 Painel do Criador: Usar chave própria do Gemini</summary>
-    <div class="content">
-        <p style="margin-bottom: 8px;">Cole sua chave da API do Google Gemini para usar a cota do Google (sujeita aos limites da camada gratuita).</p>
-        <label>Chave da API do Gemini:</label>
-        <input type="password" id="geminiKeyInput" placeholder="Cole sua chave (AIza...)" style="margin-bottom: 10px;">
-        <div class="buttons" style="margin-bottom: 10px;">
-            <button class="btn btn-purple" onclick="salvarChaveGemini()">💾 Salvar Chave</button>
-            <button class="btn btn-warning" onclick="removerChaveGemini()">🗑️ Remover Chave</button>
-        </div>
-        <div id="geminiKeyStatus" class="status"></div>
-    </div>
-  </details>
 
   <div class="notice">
     <strong>💡 Primeira vez aqui?</strong> Ao fazer sua primeira pergunta, o Puter vai pedir para você entrar ou criar uma conta gratuita. Isso leva menos de 30 segundos e é necessário para que a IA funcione. Depois, a sessão fica salva.
@@ -157,8 +139,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 <script>
 const MODELO_PUTER = "google/gemini-2.5-flash";
-const MODELO_GOOGLE = "gemini-3.8-flash";
-const STORAGE_KEY_GEMINI = "gemini_api_key_criador";
 
 const DESCRICAO_SETORES = {
   "🏛️ Direção": "decisões gerais, normas da escola, reclamações formais, autorizações.",
@@ -176,29 +156,6 @@ const DESCRICAO_SETORES = {
   "❓ Outro / Não sei qual setor": "direcionamento para o setor correto da escola.",
 };
 
-function getChaveGemini() { return localStorage.getItem(STORAGE_KEY_GEMINI) || ""; }
-function salvarChaveGemini() {
-    const input = document.getElementById('geminiKeyInput');
-    const chave = input.value.trim();
-    const status = document.getElementById('geminiKeyStatus');
-    if (chave.length < 20) { status.innerHTML = "<span style='color: #dc2626;'>❌ Chave inválida ou muito curta.</span>"; return; }
-    localStorage.setItem(STORAGE_KEY_GEMINI, chave);
-    input.value = "";
-    atualizarStatusChave();
-    status.innerHTML = "<span style='color: #059669;'>✅ Chave salva! O site usará a API do Google.</span>";
-}
-function removerChaveGemini() {
-    localStorage.removeItem(STORAGE_KEY_GEMINI);
-    document.getElementById('geminiKeyInput').value = "";
-    atualizarStatusChave();
-    document.getElementById('geminiKeyStatus').innerHTML = "<span style='color: #d97706;'>Chave removida. O site voltará a usar o Puter.</span>";
-}
-function atualizarStatusChave() {
-    const statusDiv = document.getElementById('geminiKeyStatus');
-    if (getChaveGemini()) { statusDiv.innerHTML = "<span style='color: #059669;'>🔑 Chave própria configurada. Usando API do Google.</span>"; }
-    else { statusDiv.innerHTML = "<span style='color: #64748b;'>⚪ Usando Puter (padrão).</span>"; }
-}
-
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -209,42 +166,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 async function chamarIA(prompt) {
-  const chaveGoogle = getChaveGemini();
-  if (chaveGoogle) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${chaveGoogle}`;
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: MODELO_GOOGLE,
-          input: prompt
-        })
-      });
-      if (resp.ok) {
-        const data = await resp.json();
-        let texto = "";
-        if (data.steps && Array.isArray(data.steps)) {
-          for (const step of data.steps) {
-            if (step.type === "model_output" && step.content && step.content.length > 0) {
-              for (const bloco of step.content) {
-                if (bloco.type === "text" && bloco.text) {
-                  texto += bloco.text;
-                }
-              }
-            }
-          }
-        }
-        if (texto) return texto;
-        return "❌ A IA retornou uma resposta vazia. Tente novamente.";
-      } else {
-        const err = await resp.json().catch(() => ({}));
-        return `❌ Erro na API do Google (${resp.status}): ${err.error?.message || resp.statusText}.`;
-      }
-    } catch (e) {
-      return `❌ Erro de rede ao chamar o Google: ${e.message}`;
-    }
-  }
   try {
     const response = await puter.ai.chat(prompt, { model: MODELO_PUTER });
     return response;
@@ -298,8 +219,6 @@ async function resolverSetor() {
   else { box.innerHTML = `<div class="result setor"><div class="result-header">🏫 ${escaparHtml(setor)}</div><div class="result-content">${escaparHtml(texto)}</div></div>`; }
 }
 function limparSetor() { document.getElementById('setorInput').value = ""; document.getElementById('resultSetor').innerHTML = ""; }
-
-atualizarStatusChave();
 </script>
 </body>
 </html>
