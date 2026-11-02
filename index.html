@@ -6,7 +6,6 @@
 <title>🤖 Assistente Escolar IA — Colégio El Shadai</title>
 <script src="https://js.puter.com/v2/"></script>
 <style>
-/* ... (todo o CSS anterior permanece igual) ... */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 @keyframes float { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
@@ -49,15 +48,7 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .intro { font-size: 15px; color: #1e293b; margin-bottom: 16px; }
 .notice { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border: 2px solid #3b82f6; border-radius: 14px; padding: 14px 18px; margin-bottom: 18px; color: #1e3a8a; font-size: 13px; line-height: 1.6; }
 .notice strong { color: #1e40af; }
-/* Estilo para o painel de chave do criador */
-.creator-panel {
-    background: #f8fafc;
-    border: 2px dashed #94a3b8;
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 18px;
-    font-size: 13px;
-}
+.creator-panel { background: #f8fafc; border: 2px dashed #94a3b8; border-radius: 14px; padding: 16px; margin-bottom: 18px; font-size: 13px; }
 .creator-panel summary { cursor: pointer; font-weight: 700; color: #475569; }
 .creator-panel .content { margin-top: 12px; }
 .creator-panel .status { margin-top: 8px; font-weight: 700; }
@@ -78,7 +69,6 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <div class="container">
-  <!-- Painel para o Criador colar a chave -->
   <details class="creator-panel">
     <summary>🔑 Painel do Criador: Usar chave própria do Gemini</summary>
     <div class="content">
@@ -166,11 +156,8 @@ button.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 </div>
 
 <script>
-// ============================================================
-// CONFIGURAÇÃO
-// ============================================================
-const MODELO_PUTER = "google/gemini-2.5-flash";
-const MODELO_GOOGLE = "gemini-2.5-flash"; // Modelo para a API direta do Google
+const MODELO_PUTER = "google/gemini-3.8-flash";
+const MODELO_GOOGLE = "gemini-3.8-flash";
 const STORAGE_KEY_GEMINI = "gemini_api_key_criador";
 
 const DESCRICAO_SETORES = {
@@ -189,47 +176,29 @@ const DESCRICAO_SETORES = {
   "❓ Outro / Não sei qual setor": "direcionamento para o setor correto da escola.",
 };
 
-// ============================================================
-// GERENCIAMENTO DA CHAVE DO CRIADOR
-// ============================================================
-function getChaveGemini() {
-    return localStorage.getItem(STORAGE_KEY_GEMINI) || "";
-}
-
+function getChaveGemini() { return localStorage.getItem(STORAGE_KEY_GEMINI) || ""; }
 function salvarChaveGemini() {
     const input = document.getElementById('geminiKeyInput');
     const chave = input.value.trim();
     const status = document.getElementById('geminiKeyStatus');
-    if (chave.length < 20) {
-        status.innerHTML = "<span style='color: #dc2626;'>❌ Chave inválida ou muito curta.</span>";
-        return;
-    }
+    if (chave.length < 20) { status.innerHTML = "<span style='color: #dc2626;'>❌ Chave inválida ou muito curta.</span>"; return; }
     localStorage.setItem(STORAGE_KEY_GEMINI, chave);
     input.value = "";
     atualizarStatusChave();
     status.innerHTML = "<span style='color: #059669;'>✅ Chave salva! O site usará a API do Google.</span>";
 }
-
 function removerChaveGemini() {
     localStorage.removeItem(STORAGE_KEY_GEMINI);
     document.getElementById('geminiKeyInput').value = "";
     atualizarStatusChave();
     document.getElementById('geminiKeyStatus').innerHTML = "<span style='color: #d97706;'>Chave removida. O site voltará a usar o Puter.</span>";
 }
-
 function atualizarStatusChave() {
     const statusDiv = document.getElementById('geminiKeyStatus');
-    const temChave = !!getChaveGemini();
-    if (temChave) {
-        statusDiv.innerHTML = "<span style='color: #059669;'>🔑 Chave própria configurada. Usando API do Google.</span>";
-    } else {
-        statusDiv.innerHTML = "<span style='color: #64748b;'>⚪ Usando Puter (padrão).</span>";
-    }
+    if (getChaveGemini()) { statusDiv.innerHTML = "<span style='color: #059669;'>🔑 Chave própria configurada. Usando API do Google.</span>"; }
+    else { statusDiv.innerHTML = "<span style='color: #64748b;'>⚪ Usando Puter (padrão).</span>"; }
 }
 
-// ============================================================
-// ABAS
-// ============================================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -239,38 +208,32 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// ============================================================
-// CHAMADA À IA (Puter ou Google)
-// ============================================================
 async function chamarIA(prompt) {
   const chaveGoogle = getChaveGemini();
-
-  // Se o criador salvou uma chave, usa a API do Google
   if (chaveGoogle) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODELO_GOOGLE}:generateContent?key=${chaveGoogle}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${chaveGoogle}`;
       const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 2000 }
+          model: MODELO_GOOGLE,
+          input: prompt
         })
       });
       if (resp.ok) {
         const data = await resp.json();
-        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const texto = data.outputs?.[data.outputs.length - 1]?.text;
         if (texto) return texto;
+        return "❌ A IA retornou uma resposta vazia. Tente novamente.";
       } else {
         const err = await resp.json().catch(() => ({}));
-        return `❌ Erro na API do Google (${resp.status}): ${err.error?.message || resp.statusText}. Verifique sua chave ou tente novamente mais tarde.`;
+        return `❌ Erro na API do Google (${resp.status}): ${err.error?.message || resp.statusText}.`;
       }
     } catch (e) {
       return `❌ Erro de rede ao chamar o Google: ${e.message}`;
     }
   }
-
-  // Fallback: usa o Puter se não houver chave do Google ou se a chamada falhar
   try {
     const response = await puter.ai.chat(prompt, { model: MODELO_PUTER });
     return response;
@@ -280,89 +243,51 @@ async function chamarIA(prompt) {
   }
 }
 
-function escaparHtml(t) {
-  return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+function escaparHtml(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
-// ============================================================
-// ABA MATÉRIAS
-// ============================================================
 async function perguntarMateria() {
   const materia = document.getElementById('materiaSelect').value;
   const pergunta = document.getElementById('materiaInput').value.trim();
   const box = document.getElementById('resultMateria');
   const btn = document.getElementById('btnMateria');
-
-  if (!pergunta) {
-    box.innerHTML = "<div class='error'>⚠️ Digite sua dúvida.</div>";
-    return;
-  }
-
+  if (!pergunta) { box.innerHTML = "<div class='error'>⚠️ Digite sua dúvida.</div>"; return; }
   let prompt;
   if (materia === "🎓 Todas as Matérias (modo geral)") {
     prompt = "Você é um professor particular completo, especialista em TODAS as matérias do ensino médio. Identifique automaticamente a área da dúvida do aluno e responda de forma didática, clara, curta e com exemplos. Se envolver mais de uma matéria, explique a conexão. Dúvida do aluno: " + pergunta;
   } else {
     prompt = `Você é um professor paciente e didático de ${materia} do ensino médio. Explique de forma clara, curta e com exemplos. Dúvida do aluno: ${pergunta}`;
   }
-
   box.innerHTML = "<p class='loading'>⏳ Pensando...</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
-
-  if (texto.startsWith("❌")) {
-    box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`;
-  } else {
-    box.innerHTML = `<div class="result materia"><div class="result-header">📖 ${escaparHtml(materia)}</div><div class="result-content">${escaparHtml(texto)}</div></div>`;
-  }
+  if (texto.startsWith("❌")) { box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`; }
+  else { box.innerHTML = `<div class="result materia"><div class="result-header">📖 ${escaparHtml(materia)}</div><div class="result-content">${escaparHtml(texto)}</div></div>`; }
 }
+function limparMateria() { document.getElementById('materiaInput').value = ""; document.getElementById('resultMateria').innerHTML = ""; }
 
-function limparMateria() {
-  document.getElementById('materiaInput').value = "";
-  document.getElementById('resultMateria').innerHTML = "";
-}
-
-// ============================================================
-// ABA SETORES
-// ============================================================
 async function resolverSetor() {
   const setor = document.getElementById('setorSelect').value;
   const problema = document.getElementById('setorInput').value.trim();
   const box = document.getElementById('resultSetor');
   const btn = document.getElementById('btnSetor');
-
-  if (!problema) {
-    box.innerHTML = "<div class='error'>⚠️ Descreva o problema ou dúvida.</div>";
-    return;
-  }
-
+  if (!problema) { box.innerHTML = "<div class='error'>⚠️ Descreva o problema ou dúvida.</div>"; return; }
   const descricao = DESCRICAO_SETORES[setor] || "";
   let prompt;
-
   if (setor === "❓ Outro / Não sei qual setor") {
     prompt = "Você é um assistente escolar do Colégio El Shadai. Um aluno descreveu uma situação e NÃO sabe a qual setor recorrer. Os setores são: Direção, Coordenação, Secretaria, Biblioteca, Limpeza, Manutenção, Eventos, Tesouraria, Recepção, Segurança, Laboratório e Cantina/Alimentação. Sua tarefa: (1) identificar o setor correto; (2) explicar o passo a passo que o aluno deve seguir; (3) dizer com quem falar e o que levar (se houver). Se envolver mais de um setor, indique a ordem. Responda em tópicos curtos e diretos. Situação do aluno: " + problema;
   } else {
     prompt = `Você é o responsável pelo setor ${setor} do Colégio El Shadai. Esse setor resolve: ${descricao} Responda ao aluno de forma clara e objetiva, em tópicos: (1) o que fazer; (2) com quem falar; (3) documentos a levar (se houver); (4) prazo típico. Se o problema NÃO for desse setor, indique o setor correto. Situação do aluno: ${problema}`;
   }
-
   box.innerHTML = "<p class='loading setor-loading'>⏳ Verificando e buscando solução...</p>";
   btn.disabled = true;
   const texto = await chamarIA(prompt);
   btn.disabled = false;
-
-  if (texto.startsWith("❌")) {
-    box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`;
-  } else {
-    box.innerHTML = `<div class="result setor"><div class="result-header">🏫 ${escaparHtml(setor)}</div><div class="result-content">${escaparHtml(texto)}</div></div>`;
-  }
+  if (texto.startsWith("❌")) { box.innerHTML = `<div class='error'>${escaparHtml(texto)}</div>`; }
+  else { box.innerHTML = `<div class="result setor"><div class="result-header">🏫 ${escaparHtml(setor)}</div><div class="result-content">${escaparHtml(texto)}</div></div>`; }
 }
+function limparSetor() { document.getElementById('setorInput').value = ""; document.getElementById('resultSetor').innerHTML = ""; }
 
-function limparSetor() {
-  document.getElementById('setorInput').value = "";
-  document.getElementById('resultSetor').innerHTML = "";
-}
-
-// Inicializa o status da chave ao carregar a página
 atualizarStatusChave();
 </script>
 </body>
